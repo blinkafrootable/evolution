@@ -95,6 +95,9 @@ class Creature {
         let radiusGain = (food[i] instanceof Creature) ? food[i].r * 0.25 : 2;
         let value = (radiusGain) / (distance ** 1.5);
         if (value > highestValue && distance <= this.sightRadius / 2) {
+          if (food[i] instanceof Creature && this.nearestFood instanceof Creature && food[i].r < this.nearestFood.r + 10) {
+            continue;
+          }
           // set the nearest food and the direction it's in
           this.nearestFoodDirection = p5.Vector.sub(food[i].pos, this.pos).normalize();
           this.nearestFood = food[i];

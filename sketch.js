@@ -3,7 +3,7 @@ let species = [];
 let creatures = [];
 let waste = []
 let objectCount = 300;
-let speciesCount = 5;
+let speciesCount = 20;
 let colors = []
 
 let speciesNumber = 1;
@@ -22,7 +22,7 @@ function setup() {
 
   // create species
   for (let i = 0; i < speciesCount; i++) { 
-    species.push(new Species(null));
+    species.push(new Species(null, true));
   }
 
   // create food and creatures
