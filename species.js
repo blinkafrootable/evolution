@@ -11,7 +11,7 @@ class Species {
     if (colorHistory != null) {
       this.colorHistory = this.colorHistory.concat(colorHistory);
     }
-    this.creatures = [];
+    this.members = [];
     this.points = {
       baseSpeedPoints: 0,
       baseSightPoints: 0,
@@ -68,24 +68,25 @@ class Species {
     return newSpecies;
   }
 
-  genCreatures(num) {
-    for (let i = 0; i < num; i++) {
-      creatures.push(new Creature(species));
-    }
-  }
-
   // returns the sum of all it's members' radii
   getScore() {
     let score = 0;
-    for (let i = 0; i < creatures.length; i++) {
-      if (creatures[i].species === this) {
-        score += creatures[i].r;
-      }
+    for (let i = 0; i < this.members.length; i++) {
+      score += this.members[i].r;
     }
     return round(score);
   }
 
   timeSinceCreation() {
     return millis() - this.timeCreated;
+  }
+  
+  addMember(member) {
+    this.members.push(member);
+  }
+  
+  removeMember(member) {
+    let memberIndex = this.members.indexOf(this);
+    this.members.splice(memberIndex, 1);
   }
 }

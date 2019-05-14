@@ -2,10 +2,12 @@ class Creature {
 
   constructor(species, location, customRadius) {
     this.species = species;
-    if (customRadius === undefined)
+    this.species.addMember(this);
+    if (customRadius === undefined) {
       this.r = 10;
-    else
+    } else {
       this.r = customRadius;
+    }
     this.color = this.species.colorHistory[0];
     if (location === undefined)
       this.pos = createVector(this.r + random(0, width - this.r * 2), this.r + random(0, height - this.r * 2));
@@ -45,7 +47,7 @@ class Creature {
   draw() {
     push();
     colorMode(HSB);
-    
+
     // draw main circle
     fill(this.color[0], this.color[1], this.color[2], 0.5);
     ellipse(this.pos.x, this.pos.y, this.r);
@@ -71,38 +73,49 @@ class Creature {
   }
 
   findNearestFood(food) {
+    food = food.filter((value) => {
+      if (value.eaten === true) {
+        return false;
+      }
+      let distance = this.pos.dist(value.pos);
+      if (distance > this.sightRadius / 2) {
+        return false;
+      }
+      // if it's a creature and it's bigger than 75% of this one or it's the same species or it's color history includes this species' and it was created within 30 seconds then pass it up
+      if (value instanceof Creature && (value.r > this.r * 0.75 || value.species == this.species || value.species.colorHistory.indexOf(this.color) !== -1 && value.species.timeSinceCreation() / 1000 <= 30)) {
+        return false;
+      }
+      if (value instanceof Waste) {
+        // after a creature reaches its hungerTolerance (gets too hungry) and it's too small to shrink, it'll resort to eating waste
+        if (this.timeSinceEat > this.hungerTolerance) {
+          if (this.r > 20) {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+      
+        if (value instanceof Creature && this.nearestFood instanceof Creature && value.r < this.nearestFood.r + 10) {
+          return false;
+        }
+      return true;
+    });
     this.nearestFoodDirection = null;
     this.nearestFood = null;
     let highestValue = -1;
     for (let i = 0; i < food.length; i++) {
-      if (food[i].eaten === false) {
-        // if it's a creature and it's bigger than 75% of this one or it's the same species or it's color history includes this species' and it was created within 30 seconds then pass it up
-        if (food[i] instanceof Creature && (food[i].r > this.r * 0.75 || food[i].species == this.species || food[i].species.colorHistory.indexOf(this.color) !== -1 && food[i].species.timeSinceCreation() / 1000 <= 30)) {
-          continue;
-        }
-        if (food[i] instanceof Waste) {
-          // after a creature reaches its hungerTolerance (gets too hungry) and it's too small to shrink, it'll resort to eating waste
-          if (this.timeSinceEat > this.hungerTolerance) {
-            if (this.r > 20) {
-              continue;
-            }
-          } else {
-            continue;
-          }
-        }
-        // calculate the value (radius gain)/(distance)^1.5 TODO: if the food is a creature and the current target is a creature, only select the food if its radius is 10 bigger than the current target's radius
-        let distance = this.pos.dist(food[i].pos);
-        let radiusGain = (food[i] instanceof Creature) ? food[i].r * 0.25 : 2;
-        let value = (radiusGain) / (distance ** 1.5);
-        if (value > highestValue && distance <= this.sightRadius / 2) {
-          if (food[i] instanceof Creature && this.nearestFood instanceof Creature && food[i].r < this.nearestFood.r + 10) {
-            continue;
-          }
-          // set the nearest food and the direction it's in
-          this.nearestFoodDirection = p5.Vector.sub(food[i].pos, this.pos).normalize();
-          this.nearestFood = food[i];
-          highestValue = value;
-        }
+
+      
+      // calculate the value (radius gain)/(distance)^1.5 TODO: if the food is a creature and the current target is a creature, only select the food if its radius is 10 bigger than the current target's radius
+      let distance = this.pos.dist(food[i].pos);
+      let radiusGain = (food[i] instanceof Creature) ? food[i].r * 0.25 : 2;
+      let value = (radiusGain) / (distance ** 1.5);
+      if (value > highestValue) {
+        // set the nearest food and the direction it's in
+        this.nearestFoodDirection = p5.Vector.sub(food[i].pos, this.pos).normalize();
+        this.nearestFood = food[i];
+        highestValue = value;
       }
     }
     // if the target is a Creature, then set its follower to be this one
@@ -115,11 +128,11 @@ class Creature {
     // get the region of the creature in the map
     let region = this.getRegion();
     // if the the creature is being followed and is in the main section of the map, then move direction away from it //TODO: add smart movement (multiple followers + move in the average direction away + turn near walls)
-    if (region === 'Main' && this.follower !== null /*&& this.pos.dist(this.follower.pos) <= this.r/2*/) {
+    if (region === 'Main' && this.follower !== null /*&& this.pos.dist(this.follower.pos) <= this.r/2*/ ) {
       this.wanderAngle = this.follower.nearestFoodDirection.heading();
       let moveDirection = p5.Vector.fromAngle(this.wanderAngle, 1);
       this.pos = p5.Vector.add(this.pos, moveDirection.mult(this.speed));
-    // if there's food, then go towards it
+      // if there's food, then go towards it
     } else if (this.nearestFoodDirection !== null) {
       this.pos = p5.Vector.add(this.pos, this.nearestFoodDirection.mult(this.speed));
       // move in accordance of the region that the creature is in
@@ -229,19 +242,12 @@ class Creature {
 
   die() {
     this.dead = true;
-    // see if the creature is the last of its species
-    let numSameSpecies = 0;
-    for (let i = 0; i < creatures.length; i++) {
-      if (creatures[i] !== this && creatures[i].species === this.species) {
-        numSameSpecies++;
-        break;
-      }
-    }
+    this.species.removeMember(this);
     // if the creature is the last one then take this species out of the species list
-    if (numSameSpecies === 0) {
-      species = species.filter((value) => {
-        return value !== this.species;
-      });
+    if (this.species.members.length === 0) {
+      print('extint');
+      let speciesIndex = species.indexOf(this.species);
+      species.splice(speciesIndex, 1);
     }
   }
 

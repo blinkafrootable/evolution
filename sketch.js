@@ -2,14 +2,14 @@ let food = [];
 let species = [];
 let creatures = [];
 let waste = []
-let objectCount = 300;
-let speciesCount = 20;
+let objectCount = 150;
+let speciesCount = 5;
 let colors = []
 
 let speciesNumber = 1;
 
 function setup() {
-
+  p5.disableFriendlyErrors = true; // disables FES
   frameRate(60);
   // make sure this is ran before initializing creatures
   createCanvas(windowWidth, windowHeight); 
@@ -29,7 +29,9 @@ function setup() {
   for (let i = 0; i < objectCount; i++) { 
     food.push(new Food());
     food.push(new Food());
-    creatures.push(new Creature(species[round(random(0, species.length - 1))]));
+    let randSpecies = species[round(random(0, species.length - 1))];
+    let creature = new Creature(randSpecies);
+    creatures.push(creature);
   }
 
 }
@@ -47,11 +49,16 @@ function draw() {
   }
 
   for (let i = 0; i < creatures.length; i++) {
-    creatures[i].update(food.concat(waste).concat(creatures));
+    if (creatures[i].eaten === true) {
+      creatures[i].die();
+    }
     if (creatures[i].dead === true) {
       creatures.splice(i, 1);
       i--;
+      continue;
     }
+    creatures[i].update(food.concat(waste).concat(creatures));
+
   }
 
   // check food sources
@@ -72,13 +79,6 @@ function draw() {
     }
   }
 
-  // kill off any dead creatures
-  for (let i = 0; i < creatures.length; i++) {
-    if (creatures[i].eaten === true) {
-      creatures[i].die();
-    }
-  }
-
   // # of frames between food being added >= 1, # of frames = 10 - (# of creatures)/5
   if (frameCount % max(1, (10 - round(creatures.length) / 5)) === 0) {
     food.push(new Food());
@@ -86,12 +86,17 @@ function draw() {
 
   // show score list
   let scores = getScores();
-  let scoresKeys = Object.keys(scores);
-  for (let i = 0; i < scoresKeys.length; i++) {
-    push();
+  push();
+  fill(0, 0, 0, 40);
+  noStroke();
+  rect(0, 0, 110, 20*(scores.length+1));
+  pop();
+  for (let i = 0; i < scores.length; i++) {
+    push()
     colorMode(HSB);
-    fill(scores[scoresKeys[i]].colorHistory[0], 255, 255);
-    text(`Species #${scores[scoresKeys[i]].speciesNumber}: ${scoresKeys[i]}`, 10, 20 + 20 * i);
+    let color = scores[i][0].colorHistory[0];
+    fill(color[0], color[1], color[2]);
+    text(`Species ${scores[i][0].speciesNumber}: ${scores[i][1]}`, 10, 20 + 20*i);
     pop();
   }
 
@@ -111,19 +116,21 @@ function getAvailableColor() {
   let available = colors.filter((value, index, arr) => {
     return taken.indexOf(value) === -1;
   });
-  return available[round(random(0, available.length - 1))];
+  let availableColor = available[round(random(0, available.length - 1))];
+
+  return availableColor;
 }
 
 // fetches and orders the scores in ascending order (dictionary because the associated species is attatched to the score)
 function getScores() {
-  let scores = {};
+  // 2D array storing species and their scores (not a map/dictionary so that it can be sorted)
+  let scores = [];
   for (let i = 0; i < species.length; i++) {
-    scores[species[i].getScore()] = species[i];
+    scores.push([species[i], species[i].getScore()]);
   }
-  let scoreKeys = Object.keys(scores).sort();
-  let sortedScores = {};
-  for (let i = 0; i < scoreKeys.length; i++) {
-    sortedScores[scoreKeys[i]] = scores[scoreKeys[i]];
-  }
-  return sortedScores;
+  scores = scores.sort((first, second) => {
+    return second[1] - first[1];
+  });
+
+  return scores;
 }
