@@ -1,7 +1,25 @@
-html, body {
+/* html, body {
   margin: 0;
   padding: 0;
+} */
+
+body {
+  background-color: rgb(35, 42, 53);
 }
+
+#logo {
+  display: block;
+  width: 50%;
+  margin-top: 2rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.border {
+  border: medium solid black;
+  border-radius: 4px;
+}
+
 canvas {
   display: block;
 }

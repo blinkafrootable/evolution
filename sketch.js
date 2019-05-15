@@ -3,7 +3,7 @@ let species = [];
 let creatures = [];
 let waste = []
 let objectCount = 150;
-let speciesCount = 5;
+let speciesCount = 10;
 let colors = []
 
 let speciesNumber = 1;

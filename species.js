@@ -17,6 +17,7 @@ class Species {
       baseSightPoints: 0,
       baseLifePoints: 0,
       cellDivisionPoints: 0
+      // intellect: 0
     };
 
     if (isRandom) {
@@ -29,6 +30,7 @@ class Species {
     this.points.baseSightPoints = random(0, 10);
     this.points.baseLifePoints = random(0, 10);
     this.points.cellDivisionPoints = random(0, 10);
+    // this.points.intellect = random(0, 10);
     this.genAttributes();
   }
 
@@ -39,7 +41,7 @@ class Species {
     this.cellDivisionThreshold = 25 + 5 * this.points.cellDivisionPoints;
 
     this.baseLifeSpan /= this.baseSpeed ** 1.75;
-    this.baseSightMultiplier /= this.baseSpeed ** 1.1;
+    this.baseSightMultiplier = this.baseSightMultiplier ** (1/this.baseSpeed);
   }
 
   genMutation() {
@@ -50,13 +52,15 @@ class Species {
     let oldValue = this.points[randomKey];
     // deep copy points and a apply a random addition/subtraction on a gaussian distribution
     let newPoints = JSON.parse(JSON.stringify(this.points));
-    newPoints[randomKey] = randomGaussian(newPoints[oldValue], 0.25);
+    newPoints[randomKey] = randomGaussian(oldValue, 0.25);
     // if the change made the points go below 0 or above 10
     if (newPoints[randomKey] < 0) {
       newPoints[randomKey] = 0;
     } else if (newPoints[randomKey] > 10) {
       newPoints[randomKey] = 10;
     }
+    
+    print(`[${randomKey}]: Old: ${oldValue}, New: ${newPoints[randomKey]}`);
 
     let newSpecies = new Species(this.colorHistory, false);
     for (let i = 0; i < pointsKeys.length; i++) {

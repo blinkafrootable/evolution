@@ -54,7 +54,7 @@ class Creature {
 
     // draw the ancestry rings TODO: fix this so that older = closer to the middle
     noFill(true);
-    for (let i = 0; i < this.species.colorHistory.length; i++) {
+    for (let i = this.species.colorHistory.length-1; i >= 0; i--) {
       push();
       stroke(this.species.colorHistory[i][0], this.species.colorHistory[i][1], this.species.colorHistory[i][2]);
       ellipse(this.pos.x, this.pos.y, this.r * (i * (1 / (this.species.colorHistory.length))));
@@ -245,7 +245,7 @@ class Creature {
     this.species.removeMember(this);
     // if the creature is the last one then take this species out of the species list
     if (this.species.members.length === 0) {
-      print('extint');
+      print(`Species ${this.species.speciesNumber} extint`);
       let speciesIndex = species.indexOf(this.species);
       species.splice(speciesIndex, 1);
     }
