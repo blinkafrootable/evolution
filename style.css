@@ -1,10 +1,17 @@
+/* Color palette
+#23001E - near-black
+#FE5F55 - red
+#FFBA49 - yellow-orange
+#20A39E - blue
+#CFCCD6 - lilac
+
 /* html, body {
   margin: 0;
   padding: 0;
 } */
 
 body {
-  background-color: rgb(35, 42, 53);
+  background-color: #23001E;
 }
 
 .logo {
